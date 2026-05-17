@@ -118,3 +118,20 @@ async def get_by_user_id(session: AsyncSession, user_id: int) -> list[dict]:
     )
     result = await session.execute(stmt)
     return rows_to_list(result)
+
+
+async def get_by_user_id_after(
+    session: AsyncSession,
+    user_id: int,
+    after_id: int,
+) -> list[dict]:
+    stmt = (
+        select(notifications_table)
+        .where(
+            notifications_table.c.user_id == user_id,
+            notifications_table.c.id > after_id,
+        )
+        .order_by(notifications_table.c.id.asc())
+    )
+    result = await session.execute(stmt)
+    return rows_to_list(result)

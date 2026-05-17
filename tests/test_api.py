@@ -110,6 +110,34 @@ def test_recompute_does_not_duplicate_same_notification(tmp_path, monkeypatch):
     _run(engine.dispose())
 
 
+def test_notification_stream_emits_sse_event(tmp_path, monkeypatch):
+    client, session_maker, engine = make_client(tmp_path, monkeypatch)
+    user_id = _run(_seed_matching_case(session_maker))
+    recompute = client.post(f"/notifications/recompute/{user_id}")
+    assert recompute.status_code == 200
+
+    class _RequestStub:
+        async def is_disconnected(self) -> bool:
+            return False
+
+    async def _read_first_chunk() -> str:
+        stream = notifications_router._notification_event_stream(
+            request=_RequestStub(),
+            user_id=user_id,
+            after_id=0,
+        )
+        try:
+            return await anext(stream)
+        finally:
+            await stream.aclose()
+
+    chunk = _run(_read_first_chunk())
+    assert "event: notification" in chunk
+    assert '"kind": "DIRECT"' in chunk
+    assert '"subject": "Travel alert:' in chunk
+    _run(engine.dispose())
+
+
 def test_global_hotspots_are_available(tmp_path, monkeypatch):
     client, session_maker, engine = make_client(tmp_path, monkeypatch)
     _run(_seed_matching_case(session_maker))
