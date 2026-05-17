@@ -1,8 +1,8 @@
 import csv
 import os
 import logging
-from app.contracts.models import StandardDisasterEvent
 
+from app.contracts.disaster import StandardDisasterEvent
 
 CSV_FILE_PATH = "disasters_test_data.csv"
 

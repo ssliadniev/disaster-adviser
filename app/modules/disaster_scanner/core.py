@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from app.contracts.models import DisasterSource, StandardDisasterEvent
+from app.contracts.disaster import StandardDisasterEvent, DisasterSource
 
 
 def normalize_nasa_event(raw_event: dict) -> StandardDisasterEvent:

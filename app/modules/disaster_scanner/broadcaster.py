@@ -3,7 +3,7 @@ from typing import Dict
 
 from aiostream import streamcontext
 
-from app.contracts.models import StandardDisasterEvent
+from app.contracts.disaster import StandardDisasterEvent
 from app.modules.disaster_scanner.pipeline import build_disaster_pipeline
 from app.modules.disaster_scanner.repository import save_event_to_csv
 
