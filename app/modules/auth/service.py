@@ -25,11 +25,14 @@ def _verify_password_matches(password: str) -> Callable[[dict], dict]:
         if not verify_password(password, user["hashed_password"]):
             raise InvalidCredentialsError("Incorrect email or password")
         return user
+
     return verify
 
 
 def _create_token_response(user: dict) -> dict:
-    access_token = create_access_token(data={"sub": user["email"], "user_id": user["id"]})
+    access_token = create_access_token(
+        data={"sub": user["email"], "user_id": user["id"]}
+    )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
@@ -72,7 +75,6 @@ async def register_new_user(
     email: str,
     password: str,
 ) -> dict:
-
     existing_email = await user_crud.get_by_email(db, email)
     _validate_email_available(existing_email)
 

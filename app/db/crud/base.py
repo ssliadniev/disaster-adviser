@@ -83,10 +83,7 @@ async def update_by_id(
 ) -> dict | None:
     """Update a record by ID"""
     stmt = (
-        update(table)
-        .where(table.c.id == record_id)
-        .values(**values)
-        .returning(table)
+        update(table).where(table.c.id == record_id).values(**values).returning(table)
     )
     result = await session.execute(stmt)
     await session.commit()
@@ -146,4 +143,3 @@ async def exists(
     stmt = _apply_filters(select(table), table, filters).limit(1)
     result = await session.execute(stmt)
     return result.first() is not None
-

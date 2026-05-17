@@ -41,7 +41,9 @@ async def get_by_id(session: AsyncSession, travel_plan_id: int) -> dict | None:
     return await base.get_by_id(session, travel_plans_table, travel_plan_id)
 
 
-async def get_by_event_id(session: AsyncSession, user_id: int, event_id: str) -> dict | None:
+async def get_by_event_id(
+    session: AsyncSession, user_id: int, event_id: str
+) -> dict | None:
     """Get travel plan by event ID"""
     return await base.get_by_fields(
         session,
@@ -58,11 +60,15 @@ async def get_by_user_and_timerange(
     end: datetime,
 ) -> list[dict]:
     """Get all travel plans for a user within a time range"""
-    stmt = select(travel_plans_table).where(
-        travel_plans_table.c.user_id == user_id,
-        travel_plans_table.c.start_time >= start,
-        travel_plans_table.c.end_time <= end,
-    ).order_by(travel_plans_table.c.start_time)
+    stmt = (
+        select(travel_plans_table)
+        .where(
+            travel_plans_table.c.user_id == user_id,
+            travel_plans_table.c.start_time >= start,
+            travel_plans_table.c.end_time <= end,
+        )
+        .order_by(travel_plans_table.c.start_time)
+    )
     result = await session.execute(stmt)
     return rows_to_list(result)
 
@@ -99,7 +105,9 @@ async def update_travel_plan(
     **kwargs,
 ) -> dict | None:
     """Update travel plan fields"""
-    return await base.update_by_id(session, travel_plans_table, travel_plan_id, **kwargs)
+    return await base.update_by_id(
+        session, travel_plans_table, travel_plan_id, **kwargs
+    )
 
 
 async def upsert_travel_plan(

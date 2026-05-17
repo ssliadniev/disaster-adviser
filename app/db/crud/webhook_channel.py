@@ -33,7 +33,9 @@ async def create_channel(
 
 async def get_by_channel_id(session: AsyncSession, channel_id: str) -> dict | None:
     """Get webhook channel by channel_id"""
-    return await base.get_by_field(session, webhook_channels_table, "channel_id", channel_id)
+    return await base.get_by_field(
+        session, webhook_channels_table, "channel_id", channel_id
+    )
 
 
 async def get_active_by_user(session: AsyncSession, user_id: int) -> list[dict]:
@@ -59,7 +61,9 @@ async def deactivate_channel(
 
 
 async def delete_channel(session: AsyncSession, channel_id: str) -> bool:
-    return await base.delete_by_fields(session, webhook_channels_table, channel_id=channel_id)
+    return await base.delete_by_fields(
+        session, webhook_channels_table, channel_id=channel_id
+    )
 
 
 async def get_expired_channels(session: AsyncSession) -> list[dict]:

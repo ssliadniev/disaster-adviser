@@ -60,9 +60,13 @@ async def _fetch_geocoding_data(location_name: str, api_key: str) -> dict:
         return response.json()
 
 
-def _log_result(location_name: str, coordinates: Coordinates | None) -> Coordinates | None:
+def _log_result(
+    location_name: str, coordinates: Coordinates | None
+) -> Coordinates | None:
     if coordinates:
-        logger.info(f"Geocoded '{location_name}' successfully: lat={coordinates['latitude']}, lon={coordinates['longitude']}")
+        logger.info(
+            f"Geocoded '{location_name}' successfully: lat={coordinates['latitude']}, lon={coordinates['longitude']}"
+        )
     else:
         logger.info(f"Failed to geocode '{location_name}' - no results found")
     return coordinates

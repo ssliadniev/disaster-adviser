@@ -20,17 +20,29 @@ async def save_event_to_csv(event: StandardDisasterEvent):
             writer = csv.writer(f)
 
             if not file_exists:
-                writer.writerow(["ID", "Title", "Category", "Latitude", "Longitude", "Date", "Source"])
+                writer.writerow(
+                    [
+                        "ID",
+                        "Title",
+                        "Category",
+                        "Latitude",
+                        "Longitude",
+                        "Date",
+                        "Source",
+                    ]
+                )
 
-            writer.writerow([
-                event.id,
-                event.title,
-                event.category,
-                event.latitude,
-                event.longitude,
-                event.date.isoformat(),
-                event.source.value
-            ])
+            writer.writerow(
+                [
+                    event.id,
+                    event.title,
+                    event.category,
+                    event.latitude,
+                    event.longitude,
+                    event.date.isoformat(),
+                    event.source.value,
+                ]
+            )
 
     except Exception as e:
         logger.error(f"Failed to save event {event.id} to CSV: {e}")

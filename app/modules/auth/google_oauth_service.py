@@ -38,11 +38,7 @@ def _build_oauth_params(state: str, scopes: list[str]) -> dict:
         ("prompt", "consent"),
     ]
 
-    return {
-        key: value
-        for key, value in param_configs
-        if value not in (None, "")
-    }
+    return {key: value for key, value in param_configs if value not in (None, "")}
 
 
 def _format_url(params: dict) -> str:
@@ -95,7 +91,9 @@ def extract_token_data(token_response: TokenResponse, now: datetime) -> TokenDat
 
 def build_registration_response(user: dict, message: str) -> dict:
     return {
-        "access_token": create_access_token(data={"sub": user["email"], "user_id": user["id"]}),
+        "access_token": create_access_token(
+            data={"sub": user["email"], "user_id": user["id"]}
+        ),
         "token_type": "bearer",
         "message": message,
         "user": {
@@ -119,7 +117,9 @@ async def _exchange_and_extract(code: str) -> TokenData:
     return extract_token_data(token_response, now=datetime.now(timezone.utc))
 
 
-async def _find_user_by_oauth(db: AsyncSession, google_id: str) -> tuple[dict, str] | None:
+async def _find_user_by_oauth(
+    db: AsyncSession, google_id: str
+) -> tuple[dict, str] | None:
     oauth_account = await oauth_crud.get_by_provider_user_id(db, "google", google_id)
     if not oauth_account:
         return None
@@ -139,7 +139,9 @@ async def _create_new_user(db: AsyncSession, email: str) -> tuple[dict, str]:
     return new_user, "Account created successfully via Google"
 
 
-async def _resolve_or_create_user(db: AsyncSession, google_id: str, email: str) -> tuple[dict, str]:
+async def _resolve_or_create_user(
+    db: AsyncSession, google_id: str, email: str
+) -> tuple[dict, str]:
     return (
         await _find_user_by_oauth(db, google_id)
         or await _find_user_by_email(db, email)
@@ -147,7 +149,9 @@ async def _resolve_or_create_user(db: AsyncSession, google_id: str, email: str) 
     )
 
 
-async def _store_token(db: AsyncSession, user_id: int, provider_user_id: str, token_data: TokenData) -> None:
+async def _store_token(
+    db: AsyncSession, user_id: int, provider_user_id: str, token_data: TokenData
+) -> None:
     await oauth_crud.create_or_update_oauth_account(
         db,
         user_id=user_id,
@@ -169,11 +173,15 @@ def _extract_google_credentials(user_info: UserInfo) -> tuple[str, str]:
     return google_id, email
 
 
-def _build_registration_result(user: dict, message: str, token_data: TokenData, scope: str | None) -> dict:
+def _build_registration_result(
+    user: dict, message: str, token_data: TokenData, scope: str | None
+) -> dict:
     return {"user": user, "message": message, "token_data": token_data, "scope": scope}
 
 
-async def process_oauth_registration(code: str, scope: str | None, db: AsyncSession) -> dict:
+async def process_oauth_registration(
+    code: str, scope: str | None, db: AsyncSession
+) -> dict:
     token_data = await _exchange_and_extract(code)
     user_info: UserInfo = await get_user_info(token_data["access_token"])
 
@@ -199,7 +207,9 @@ def _build_connection_result(token_data: TokenData, scope: str | None) -> dict:
     return {"token_data": token_data, "scope": scope}
 
 
-async def process_oauth_connection(code: str, scope: str | None, user_id: int, db: AsyncSession) -> dict:
+async def process_oauth_connection(
+    code: str, scope: str | None, user_id: int, db: AsyncSession
+) -> dict:
     token_data = await _exchange_and_extract(code)
     user_info: UserInfo = await get_user_info(token_data["access_token"])
 
@@ -207,4 +217,3 @@ async def process_oauth_connection(code: str, scope: str | None, user_id: int, d
     await _store_token(db, user_id, google_id, token_data)
 
     return _build_connection_result(token_data, scope)
-

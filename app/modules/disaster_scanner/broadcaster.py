@@ -22,7 +22,10 @@ async def stream_consumer_worker():
         async with streamcontext(pipeline) as streamer:
             async for event in streamer:
                 try:
-                    print(f">>> [PIPELINE] Processed: {event.source.value} - {event.title}", flush=True)
+                    print(
+                        f">>> [PIPELINE] Processed: {event.source.value} - {event.title}",
+                        flush=True,
+                    )
                     ACTIVE_DISASTERS_CACHE[event.id] = event
                     await save_event_to_csv(event)
                 except Exception as e:

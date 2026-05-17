@@ -11,4 +11,3 @@ __all__ = [
     "travel_plans_table",
     "user_preferences_table",
 ]
-

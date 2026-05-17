@@ -33,7 +33,6 @@ class WebhookRegisterResponse(BaseModel):
     note: str
 
 
-
 class WebhookEventResponse(BaseModel):
     status: str
     type: str
@@ -44,6 +43,7 @@ class WebhookEventResponse(BaseModel):
 
 class WebhookChannel(TypedDict):
     """Webhook channel response"""
+
     channel_id: str
     resource_id: str | None
     expiration: str | None
@@ -52,6 +52,7 @@ class WebhookChannel(TypedDict):
 
 class NotificationResult(TypedDict):
     """Notification processing result"""
+
     status: Literal["acknowledged", "processed", "ok"]
     type: str
     message: str
@@ -60,5 +61,3 @@ class NotificationResult(TypedDict):
 
 
 ResourceState = Literal["sync", "exists", "not_exists"]
-
-

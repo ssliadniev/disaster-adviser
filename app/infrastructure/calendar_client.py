@@ -41,7 +41,11 @@ def parse_google_datetime(dt_data: dict | None) -> datetime | None:
 
 
 def _format_datetime_for_google(dt: datetime) -> str:
-    utc_dt = dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+    utc_dt = (
+        dt.replace(tzinfo=timezone.utc)
+        if dt.tzinfo is None
+        else dt.astimezone(timezone.utc)
+    )
     return utc_dt.replace(tzinfo=None).isoformat() + "Z"
 
 
@@ -97,7 +101,9 @@ def _calculate_expiration_ms(hours: int) -> int:
     return int(expiration_time.timestamp() * 1000)
 
 
-def _build_webhook_payload(channel_id: str, webhook_url: str, expiration_ms: int) -> dict:
+def _build_webhook_payload(
+    channel_id: str, webhook_url: str, expiration_ms: int
+) -> dict:
     return {
         "id": channel_id,
         "type": "web_hook",
@@ -142,4 +148,3 @@ async def register_calendar_webhook(
     url = _build_watch_url(calendar_id)
 
     return await _post_webhook_registration(url, access_token, payload)
-

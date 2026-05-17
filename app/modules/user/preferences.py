@@ -1,7 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.crud import user_preferences as prefs_crud
-from app.modules.user.exceptions import PreferencesNotFoundError, InvalidPreferencesError
+from app.modules.user.exceptions import (
+    PreferencesNotFoundError,
+    InvalidPreferencesError,
+)
 from app.utils.functional import Ok, Err, Result
 from app.utils.validators import validate_preferences
 
@@ -20,14 +23,14 @@ def _validate_prefs_exist(prefs: dict | None, user_id: int) -> dict:
     return prefs
 
 
-async def _update_preferences(db: AsyncSession, user_id: int, validated: dict) -> dict | None:
+async def _update_preferences(
+    db: AsyncSession, user_id: int, validated: dict
+) -> dict | None:
     return await prefs_crud.update_preferences(db, user_id, **validated)
 
 
 async def apply_preference_updates(
-    db: AsyncSession,
-    user_id: int,
-    update_data: dict
+    db: AsyncSession, user_id: int, update_data: dict
 ) -> dict:
     validation_result = validate_preferences(update_data)
     validated = _extract_validated(validation_result)

@@ -80,7 +80,8 @@ class DisasterCategory(str, Enum):
         return (
             cls.UNKNOWN
             if not category_str
-            else try_parse(normalized := normalize(category_str)) or category_map.get(normalized, cls.UNKNOWN)
+            else try_parse(normalized := normalize(category_str))
+            or category_map.get(normalized, cls.UNKNOWN)
         )
 
     @classmethod

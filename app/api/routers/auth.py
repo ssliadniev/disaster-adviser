@@ -17,8 +17,7 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Authentication"])
     description="Authenticate user and get access token",
 )
 async def login_for_access_token(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: AsyncSession = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)
 ) -> Token:
     """Authenticate user and return access token."""
     try:
@@ -39,8 +38,7 @@ async def login_for_access_token(
     description="Create a new user account",
 )
 async def register_user(
-    user_data: UserCreate,
-    db: AsyncSession = Depends(get_db)
+    user_data: UserCreate, db: AsyncSession = Depends(get_db)
 ) -> UserResponse:
     """Register a new user with default preferences."""
     try:

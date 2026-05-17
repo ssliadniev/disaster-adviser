@@ -7,7 +7,12 @@ webhook_channels_table = sa.Table(
     metadata,
     sa.Column("id", sa.Integer, primary_key=True),
     sa.Column("channel_id", sa.String, unique=True, nullable=False, index=True),
-    sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id", ondelete="CASCADE"), nullable=False),
+    sa.Column(
+        "user_id",
+        sa.Integer,
+        sa.ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+    ),
     sa.Column("calendar_id", sa.String, nullable=False),
     sa.Column("webhook_url", sa.String, nullable=False),
     sa.Column("resource_id", sa.String, nullable=True),

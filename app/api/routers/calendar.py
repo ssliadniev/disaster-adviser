@@ -7,7 +7,11 @@ from starlette.responses import RedirectResponse
 
 from app.contracts.calendar import WebhookRegisterResponse, WebhookEventResponse
 from app.core.config import settings
-from app.core.dependencies import get_current_user, OAuthStateManager, get_oauth_state_manager
+from app.core.dependencies import (
+    get_current_user,
+    OAuthStateManager,
+    get_oauth_state_manager,
+)
 from app.contracts.user import TokenData
 from app.db.session import get_db
 from app.modules.auth.google_oauth_service import build_auth_url
@@ -22,6 +26,7 @@ from app.db.crud import user as user_crud
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["Calendar"])
+
 
 @router.get(
     "/calendar/connect",
@@ -53,16 +58,15 @@ async def connect_calendar(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to initiate calendar connection: {str(e)}"
+            detail=f"Failed to initiate calendar connection: {str(e)}",
         )
-
 
 
 @router.post(
     "/webhook/register",
     response_model=WebhookRegisterResponse,
     summary="Register Calendar Webhook",
-    description="Register a webhook for the user's primary Google Calendar using the configured webhook URL. Automatically deactivates old webhooks for the same user."
+    description="Register a webhook for the user's primary Google Calendar using the configured webhook URL. Automatically deactivates old webhooks for the same user.",
 )
 async def register_webhook(
     current_user: TokenData = Depends(get_current_user),
@@ -76,19 +80,22 @@ async def register_webhook(
     if not settings.GOOGLE_WEBHOOK_URL:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="GOOGLE_WEBHOOK_URL is not configured in environment variables"
+            detail="GOOGLE_WEBHOOK_URL is not configured in environment variables",
         )
 
     try:
         user = await user_crud.get_by_email(db, current_user.email)
         if user:
             from app.db.crud import webhook_channel as webhook_crud
+
             active_webhooks = await webhook_crud.get_active_by_user(db, user["id"])
             for webhook in active_webhooks:
                 await webhook_crud.deactivate_channel(db, webhook["channel_id"])
 
             if active_webhooks:
-                logger.info(f"Deactivated {len(active_webhooks)} old webhook(s) for user {user['id']}")
+                logger.info(
+                    f"Deactivated {len(active_webhooks)} old webhook(s) for user {user['id']}"
+                )
 
         result = await register_webhook_service(
             db,
@@ -107,7 +114,7 @@ async def register_webhook(
 @router.post(
     "/webhook/events",
     response_model=WebhookEventResponse,
-    summary="Webhook Event Handler (Called by Google)"
+    summary="Webhook Event Handler (Called by Google)",
 )
 async def webhook_events(
     x_goog_channel_id: str | None = Header(None),
@@ -119,7 +126,9 @@ async def webhook_events(
 
     This endpoint is called by Google when calendar events change.
     """
-    logger.info(f"Webhook received: channel_id={x_goog_channel_id}, state={x_goog_resource_state}, resource_id={x_goog_resource_id}, msg_num={x_goog_message_number}")
+    logger.info(
+        f"Webhook received: channel_id={x_goog_channel_id}, state={x_goog_resource_state}, resource_id={x_goog_resource_id}, msg_num={x_goog_message_number}"
+    )
 
     try:
         result = await process_webhook_notification(
@@ -127,7 +136,9 @@ async def webhook_events(
             resource_state=x_goog_resource_state,
         )
 
-        logger.info(f"Webhook processed: status={result['status']}, type={result['type']}, message={result['message']}")
+        logger.info(
+            f"Webhook processed: status={result['status']}, type={result['type']}, message={result['message']}"
+        )
         return WebhookEventResponse(**result)
     except Exception as e:
         logger.error(f"Webhook error: {type(e).__name__}: {str(e)}")
@@ -137,7 +148,7 @@ async def webhook_events(
 @router.post(
     "/calendar/sync",
     summary="Sync Calendar Events",
-    description="Sync calendar events with database and clean up deleted events"
+    description="Sync calendar events with database and clean up deleted events",
 )
 async def sync_calendar_events(
     current_user: TokenData = Depends(get_current_user),
@@ -155,12 +166,9 @@ async def sync_calendar_events(
         return {
             "message": "Calendar sync completed successfully",
             "deleted_events": deleted_count,
-            "user_email": current_user.email
+            "user_email": current_user.email,
         }
 
     except Exception as e:
         await db.rollback()
         raise webhook_error_mapper(e)
-
-
-

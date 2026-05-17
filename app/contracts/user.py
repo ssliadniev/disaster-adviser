@@ -15,11 +15,17 @@ class TokenData(BaseModel):
 
 class UserCreate(BaseModel):
     email: EmailStr = Field(..., description="Email address")
-    password: str = Field(..., min_length=8, max_length=128, description="Password (plain text, will be hashed)")
+    password: str = Field(
+        ...,
+        min_length=8,
+        max_length=128,
+        description="Password (plain text, will be hashed)",
+    )
 
 
 class UserResponse(BaseModel):
     """Response schema for user data (no password)"""
+
     id: int
     email: str
 
@@ -29,6 +35,7 @@ class UserResponse(BaseModel):
 
 class PreferencesUpdate(BaseModel):
     """User preferences update"""
+
     notification_enabled: bool | None = None
     disaster_categories: list[str] | None = Field(
         None,
@@ -36,11 +43,14 @@ class PreferencesUpdate(BaseModel):
         examples=[DisasterCategory.get_all_values()],
     )
     alert_threshold_distance_km: float | None = Field(None, gt=0, le=10000)
-    timezone: str | None = Field(None, description="Timezone (e.g., 'UTC', 'America/New_York')")
+    timezone: str | None = Field(
+        None, description="Timezone (e.g., 'UTC', 'America/New_York')"
+    )
 
 
 class PreferencesResponse(BaseModel):
     """User preferences response"""
+
     id: int
     user_id: int
     notification_enabled: bool

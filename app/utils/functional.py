@@ -24,6 +24,7 @@ Result = Ok[T] | Err[E]
 def compose(*fns: Callable) -> Callable:
     def _apply(value: A) -> B:
         return reduce(lambda acc, fn: fn(acc), fns, value)
+
     return _apply
 
 

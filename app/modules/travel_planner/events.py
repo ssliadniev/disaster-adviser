@@ -32,7 +32,9 @@ def _extract_event_details(event: dict) -> EventDetails:
 
 async def _fetch_recent_events(access_token: str, minutes_back: int = 5) -> list[dict]:
     time_min, time_max = _time_window(minutes_back)
-    logger.info(f"Fetching recent events: minutes_back={minutes_back}, time_min={time_min.isoformat()}, time_max={time_max.isoformat()}")
+    logger.info(
+        f"Fetching recent events: minutes_back={minutes_back}, time_min={time_min.isoformat()}, time_max={time_max.isoformat()}"
+    )
 
     events = await get_events(
         access_token=access_token,
@@ -63,18 +65,24 @@ def _create_error_event(exc: Exception) -> EventDetails:
     return EventDetails(error=str(exc))
 
 
-async def _fetch_and_extract_recent_event(session: AsyncSession, user_id: int) -> EventDetails | None:
+async def _fetch_and_extract_recent_event(
+    session: AsyncSession, user_id: int
+) -> EventDetails | None:
     try:
         logger.info(f"Fetching and extracting recent event: user_id={user_id}")
 
         oauth = await oauth_crud.get_by_user_and_provider(session, user_id, "google")
         validated_oauth = _validate_oauth(oauth)
 
-        events = await _fetch_recent_events(validated_oauth["access_token"], minutes_back=5)
+        events = await _fetch_recent_events(
+            validated_oauth["access_token"], minutes_back=5
+        )
         first_event = _validate_events(events)
 
         event_details = _extract_event_details(first_event)
-        logger.info(f"Extracted event details: user_id={user_id}, event_id={event_details.get('id')}, event_summary={event_details.get('summary')}")
+        logger.info(
+            f"Extracted event details: user_id={user_id}, event_id={event_details.get('id')}, event_summary={event_details.get('summary')}"
+        )
         return event_details
 
     except ValueError as exc:
@@ -91,7 +99,7 @@ def _create_sync_result(user_email: str) -> NotificationResult:
         type="sync",
         message="Webhook sync successful",
         user=user_email,
-        event=None
+        event=None,
     )
 
 
@@ -117,7 +125,9 @@ def _parse_datetime(date_str: str | None) -> datetime | None:
         return None
 
 
-async def _geocode_if_location(event_id: str, location_name: str | None) -> tuple[float | None, float | None]:
+async def _geocode_if_location(
+    event_id: str, location_name: str | None
+) -> tuple[float | None, float | None]:
     if not location_name:
         return None, None
 
@@ -125,19 +135,27 @@ async def _geocode_if_location(event_id: str, location_name: str | None) -> tupl
     coordinates = await geocode_location(location_name)
 
     if coordinates:
-        logger.info(f"Geocoded location successfully: event_id={event_id}, latitude={coordinates['latitude']}, longitude={coordinates['longitude']}")
+        logger.info(
+            f"Geocoded location successfully: event_id={event_id}, latitude={coordinates['latitude']}, longitude={coordinates['longitude']}"
+        )
         return coordinates["latitude"], coordinates["longitude"]
 
-    logger.info(f"Failed to geocode location: event_id={event_id}, location={location_name}")
+    logger.info(
+        f"Failed to geocode location: event_id={event_id}, location={location_name}"
+    )
     return None, None
 
 
-async def _save_event_to_travel_plan(session: AsyncSession, user_id: int, event: EventDetails) -> dict | None:
+async def _save_event_to_travel_plan(
+    session: AsyncSession, user_id: int, event: EventDetails
+) -> dict | None:
     if not _is_valid_event(event):
         return None
 
     if not _has_required_fields(event):
-        logger.info(f"Skipping event save - missing required fields: event_id={event.get('id')}")
+        logger.info(
+            f"Skipping event save - missing required fields: event_id={event.get('id')}"
+        )
         return None
 
     event_id = event.get("id", "")
@@ -165,38 +183,52 @@ async def _save_event_to_travel_plan(session: AsyncSession, user_id: int, event:
             end_time=end_time,
         )
 
-        logger.info(f"Saved event to travel_plans: user_id={user_id}, event_id={event_id}, travel_plan_id={travel_plan.get('id')}, has_coordinates={bool(latitude and longitude)}")
+        logger.info(
+            f"Saved event to travel_plans: user_id={user_id}, event_id={event_id}, travel_plan_id={travel_plan.get('id')}, has_coordinates={bool(latitude and longitude)}"
+        )
         return travel_plan
 
     except Exception as exc:
-        logger.error(f"Error saving event to travel_plans: user_id={user_id}, event_id={event_id}, error={exc}")
+        logger.error(
+            f"Error saving event to travel_plans: user_id={user_id}, event_id={event_id}, error={exc}"
+        )
         return None
 
 
-def _create_change_result(user_email: str, event: EventDetails | None) -> NotificationResult:
+def _create_change_result(
+    user_email: str, event: EventDetails | None
+) -> NotificationResult:
     return NotificationResult(
         status="processed",
         type="event_change",
         message="Calendar event change detected",
         user=user_email,
-        event=event
+        event=event,
     )
 
 
-async def handle_calendar_change(session: AsyncSession, user_id: int, user_email: str) -> NotificationResult:
-    logger.info(f"Handling calendar change webhook: user_id={user_id}, user_email={user_email}")
+async def handle_calendar_change(
+    session: AsyncSession, user_id: int, user_email: str
+) -> NotificationResult:
+    logger.info(
+        f"Handling calendar change webhook: user_id={user_id}, user_email={user_email}"
+    )
 
     event = await _fetch_and_extract_recent_event(session, user_id)
 
     if event:
-        logger.info(f"Calendar change processed with event: user_id={user_id}, event_id={event.get('id')}")
+        logger.info(
+            f"Calendar change processed with event: user_id={user_id}, event_id={event.get('id')}"
+        )
         await _save_event_to_travel_plan(session, user_id, event)
     else:
         logger.info(f"Calendar change processed but no event found: user_id={user_id}")
 
     deleted_count = await _sync_and_cleanup_deleted_events(session, user_id)
     if deleted_count > 0:
-        logger.info(f"Deleted events during sync: user_id={user_id}, deleted_count={deleted_count}")
+        logger.info(
+            f"Deleted events during sync: user_id={user_id}, deleted_count={deleted_count}"
+        )
 
     return _create_change_result(user_email, event)
 
@@ -210,12 +242,16 @@ def _extract_event_ids(events: list[dict]) -> set[str]:
     return {event.get("id") for event in events if event.get("id")}
 
 
-def _should_delete(db_event: dict, google_event_ids: set[str]) -> tuple[bool, str | None]:
+def _should_delete(
+    db_event: dict, google_event_ids: set[str]
+) -> tuple[bool, str | None]:
     event_id = db_event.get("event_id")
     return (event_id is not None and event_id not in google_event_ids, event_id)
 
 
-async def _fetch_google_events(oauth: dict, time_min: datetime, time_max: datetime) -> list[dict]:
+async def _fetch_google_events(
+    oauth: dict, time_min: datetime, time_max: datetime
+) -> list[dict]:
     return await get_events(
         access_token=oauth["access_token"],
         time_min=time_min,
@@ -230,7 +266,7 @@ async def _delete_stale_events(
     session: AsyncSession,
     user_id: int,
     db_events: list[dict],
-    google_event_ids: set[str]
+    google_event_ids: set[str],
 ) -> int:
     deleted_count = 0
     for db_event in db_events:
@@ -238,7 +274,9 @@ async def _delete_stale_events(
         if should_delete and event_id:
             await travel_plan_crud.delete_by_event_id(session, user_id, event_id)
             deleted_count += 1
-            logger.info(f"Deleted event from database (no longer in Google Calendar): user_id={user_id}, event_id={event_id}")
+            logger.info(
+                f"Deleted event from database (no longer in Google Calendar): user_id={user_id}, event_id={event_id}"
+            )
 
     return deleted_count
 
@@ -254,18 +292,28 @@ async def _sync_and_cleanup_deleted_events(session: AsyncSession, user_id: int) 
         google_events = await _fetch_google_events(oauth, time_min, time_max)
         google_event_ids = _extract_event_ids(google_events)
 
-        logger.info(f"Fetched events from Google for sync: user_id={user_id}, count={len(google_event_ids)}")
+        logger.info(
+            f"Fetched events from Google for sync: user_id={user_id}, count={len(google_event_ids)}"
+        )
 
-        db_events = await travel_plan_crud.get_by_user_and_timerange(session, user_id, time_min, time_max)
-        deleted_count = await _delete_stale_events(session, user_id, db_events, google_event_ids)
+        db_events = await travel_plan_crud.get_by_user_and_timerange(
+            session, user_id, time_min, time_max
+        )
+        deleted_count = await _delete_stale_events(
+            session, user_id, db_events, google_event_ids
+        )
 
         if deleted_count > 0:
-            logger.info(f"Cleanup complete: user_id={user_id}, deleted_count={deleted_count}")
+            logger.info(
+                f"Cleanup complete: user_id={user_id}, deleted_count={deleted_count}"
+            )
 
         return deleted_count
 
     except Exception as exc:
-        logger.error(f"Error syncing and cleaning up deleted events: user_id={user_id}, error={exc}")
+        logger.error(
+            f"Error syncing and cleaning up deleted events: user_id={user_id}, error={exc}"
+        )
         return 0
 
 
@@ -275,7 +323,7 @@ def _create_deletion_result(user_email: str) -> NotificationResult:
         type="event_deleted",
         message="Calendar event deleted",
         user=user_email,
-        event=None
+        event=None,
     )
 
 

@@ -7,12 +7,14 @@ from functools import partial
 import httpx
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.contracts.calendar import  NotificationResult, ResourceState
+from app.contracts.calendar import NotificationResult, ResourceState
 from app.db.crud import user as user_crud
 from app.db.crud import oauth_token as oauth_crud
 from app.db.crud import webhook_channel as webhook_crud
 from app.db.session import AsyncSessionLocal
-from app.infrastructure.calendar_client import register_calendar_webhook as google_register_webhook
+from app.infrastructure.calendar_client import (
+    register_calendar_webhook as google_register_webhook,
+)
 from app.modules.travel_planner.exceptions import (
     WebhookRegistrationError,
     WebhookNotFoundError,
@@ -42,7 +44,9 @@ def _user_email(user: dict | None) -> str:
     return user.get("email", "unknown") if user else "unknown"
 
 
-def _build_webhook_channel(channel_id: str, webhook_url: str, watch_response: dict) -> dict:
+def _build_webhook_channel(
+    channel_id: str, webhook_url: str, watch_response: dict
+) -> dict:
     return {
         "channel_id": channel_id,
         "resource_id": watch_response.get("resourceId"),
@@ -53,13 +57,11 @@ def _build_webhook_channel(channel_id: str, webhook_url: str, watch_response: di
     }
 
 
-def _make_acknowledged(type_: str, message: str, user: str | None = None) -> NotificationResult:
+def _make_acknowledged(
+    type_: str, message: str, user: str | None = None
+) -> NotificationResult:
     return NotificationResult(
-        status="acknowledged",
-        type=type_,
-        message=message,
-        user=user,
-        event=None
+        status="acknowledged", type=type_, message=message, user=user, event=None
     )
 
 
@@ -73,7 +75,9 @@ async def _get_user_or_raise(session: AsyncSession, email: str) -> dict:
 async def _get_google_oauth_or_raise(session: AsyncSession, user_id: int) -> dict:
     oauth = await oauth_crud.get_by_user_and_provider(session, user_id, "google")
     if not oauth:
-        raise WebhookPermissionError("Google Calendar not connected. Please authenticate first.")
+        raise WebhookPermissionError(
+            "Google Calendar not connected. Please authenticate first."
+        )
     if not oauth.get("access_token"):
         raise WebhookPermissionError("No valid access token. Please re-authenticate.")
     return oauth
@@ -99,7 +103,9 @@ async def register_webhook(
             calendar_id=calendar_id,
         )
     except httpx.HTTPStatusError as exc:
-        raise WebhookRegistrationError(f"Failed to register webhook with Google: {exc.response.text}") from exc
+        raise WebhookRegistrationError(
+            f"Failed to register webhook with Google: {exc.response.text}"
+        ) from exc
 
     expiration_str = watch_response.get("expiration")
     expiration_int = int(expiration_str) if expiration_str else None
@@ -114,18 +120,28 @@ async def register_webhook(
         expiration=expiration_int,
     )
 
-    return pipe(watch_response, partial(_build_webhook_channel, channel_id, webhook_url))
+    return pipe(
+        watch_response, partial(_build_webhook_channel, channel_id, webhook_url)
+    )
 
 
-async def process_webhook_notification(channel_id: str, resource_state: ResourceState) -> NotificationResult:
-    logger.info(f"Processing webhook notification: channel_id={channel_id}, state={resource_state}")
+async def process_webhook_notification(
+    channel_id: str, resource_state: ResourceState
+) -> NotificationResult:
+    logger.info(
+        f"Processing webhook notification: channel_id={channel_id}, state={resource_state}"
+    )
 
     async with AsyncSessionLocal() as session:
         channel = await webhook_crud.get_by_channel_id(session, channel_id)
 
         if not channel or not channel.get("is_active"):
-            logger.info(f"Webhook channel not found or inactive: channel_id={channel_id}")
-            return _make_acknowledged(resource_state, "Webhook received (channel not found or inactive)")
+            logger.info(
+                f"Webhook channel not found or inactive: channel_id={channel_id}"
+            )
+            return _make_acknowledged(
+                resource_state, "Webhook received (channel not found or inactive)"
+            )
 
         user = await user_crud.get_by_id(session, channel["user_id"])
         user_email = pipe(user, _user_email)
@@ -138,12 +154,16 @@ async def process_webhook_notification(channel_id: str, resource_state: Resource
                 return await handle_calendar_sync(user_email)
             case "exists":
                 logger.info(f"Handling webhook CALENDAR CHANGE for user={user_email}")
-                result = await handle_calendar_change(session, channel["user_id"], user_email)
+                result = await handle_calendar_change(
+                    session, channel["user_id"], user_email
+                )
                 await session.commit()
                 return result
             case "not_exists":
                 logger.info(f"Handling webhook DELETION for user={user_email}")
                 return await handle_calendar_deletion(user_email)
             case _:
-                logger.warning(f"Unknown webhook state '{resource_state}', treating as SYNC")
+                logger.warning(
+                    f"Unknown webhook state '{resource_state}', treating as SYNC"
+                )
                 return await handle_calendar_sync(user_email)
