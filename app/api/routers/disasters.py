@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from typing import List
 from app.contracts.disaster import StandardDisasterEvent
 
-from app.modules.disaster_scanner.broadcaster import get_current_disasters
+from app.modules.disaster_scanner.cache import get_current_disasters
 
 router = APIRouter()
 

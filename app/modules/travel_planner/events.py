@@ -186,6 +186,11 @@ async def _save_event_to_travel_plan(
         logger.info(
             f"Saved event to travel_plans: user_id={user_id}, event_id={event_id}, travel_plan_id={travel_plan.get('id')}, has_coordinates={bool(latitude and longitude)}"
         )
+        from app.modules.notification_service.integration import (
+            process_travel_plan_notifications,
+        )
+
+        await process_travel_plan_notifications(session, travel_plan)
         return travel_plan
 
     except Exception as exc:

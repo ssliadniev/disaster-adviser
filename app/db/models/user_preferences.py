@@ -3,6 +3,8 @@ from sqlalchemy.dialects.postgresql import ARRAY
 
 from app.db.models.base import metadata
 
+disaster_categories_type = sa.JSON().with_variant(ARRAY(sa.String), "postgresql")
+
 user_preferences_table = sa.Table(
     "user_preferences",
     metadata,
@@ -16,7 +18,7 @@ user_preferences_table = sa.Table(
         index=True,
     ),
     sa.Column("notification_enabled", sa.Boolean, default=True, nullable=False),
-    sa.Column("disaster_categories", ARRAY(sa.String), default=[], nullable=False),
+    sa.Column("disaster_categories", disaster_categories_type, default=list, nullable=False),
     sa.Column("alert_threshold_distance_km", sa.Float, default=100.0, nullable=False),
     sa.Column("timezone", sa.String, default="UTC", nullable=False),
 )
