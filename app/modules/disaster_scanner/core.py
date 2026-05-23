@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from app.contracts.models import DisasterSource, StandardDisasterEvent
+from app.contracts.disaster import StandardDisasterEvent, DisasterSource
 
 
 def normalize_nasa_event(raw_event: dict) -> StandardDisasterEvent:
@@ -9,9 +9,7 @@ def normalize_nasa_event(raw_event: dict) -> StandardDisasterEvent:
     """
 
     sorted_geometry = sorted(
-        raw_event.get("geometry", []),
-        key=lambda g: g.get("date", ""),
-        reverse=True
+        raw_event.get("geometry", []), key=lambda g: g.get("date", ""), reverse=True
     )
     latest_geometry = sorted_geometry[0] if sorted_geometry else {}
     coords = latest_geometry.get("coordinates", [0.0, 0.0])
@@ -26,7 +24,7 @@ def normalize_nasa_event(raw_event: dict) -> StandardDisasterEvent:
         date=datetime.fromisoformat(
             latest_geometry.get("date", "1970-01-01T00:00:00Z").replace("Z", "+00:00")
         ),
-        source=DisasterSource.NASA
+        source=DisasterSource.NASA,
     )
 
 
@@ -45,7 +43,7 @@ def normalize_pdc_event(raw_event: dict) -> StandardDisasterEvent:
         latitude=float(raw_event.get("latitude", 0.0)),
         longitude=float(raw_event.get("longitude", 0.0)),
         date=datetime.fromtimestamp(timestamp_seconds, tz=timezone.utc),
-        source=DisasterSource.PDC
+        source=DisasterSource.PDC,
     )
 
 

@@ -2,8 +2,7 @@ from aiostream import pipe, stream
 
 from app.modules.disaster_scanner.core import normalize_router
 from app.modules.disaster_scanner.operators import deduplicator
-from app.modules.disaster_scanner.streams import (fetch_nasa_stream,
-                                                  fetch_pdc_stream)
+from app.modules.disaster_scanner.streams import fetch_nasa_stream, fetch_pdc_stream
 
 
 def build_disaster_pipeline():
@@ -13,7 +12,7 @@ def build_disaster_pipeline():
     combined_stream = stream.merge(nasa_gen)
 
     return (
-            combined_stream
-            | pipe.map(normalize_router)
-            | deduplicator.pipe(key_extractor=lambda event: event.id)
+        combined_stream
+        | pipe.map(normalize_router)
+        | deduplicator.pipe(key_extractor=lambda event: event.id)
     )
