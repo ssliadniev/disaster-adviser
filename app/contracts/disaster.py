@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class DisasterSource(str, Enum):
@@ -60,6 +60,8 @@ class DisasterCategory(str, Enum):
             "volcanic_activity": cls.VOLCANIC_ERUPTION,
             "storm": cls.SEVERE_STORM,
             "storms": cls.SEVERE_STORM,
+            "severe_storm": cls.SEVERE_STORM,
+            "severe_storms": cls.SEVERE_STORM,
             "severe_weather": cls.SEVERE_STORM,
             "droughts": cls.DROUGHT,
             "landslides": cls.LANDSLIDE,
@@ -104,3 +106,20 @@ class StandardDisasterEvent(BaseModel):
     longitude: float
     date: datetime
     source: DisasterSource
+    closed: datetime | None = None
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def _normalize_category(cls, value: DisasterCategory | str) -> DisasterCategory:
+        if isinstance(value, DisasterCategory):
+            return value
+        return DisasterCategory.from_string(str(value))
+
+    @field_validator("date", "closed", mode="before")
+    @classmethod
+    def _normalize_dt(cls, value: datetime | str | None) -> datetime | None:
+        if value is None:
+            return value
+        if isinstance(value, str):
+            value = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return value if value.tzinfo else value.replace(tzinfo=UTC)

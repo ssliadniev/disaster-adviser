@@ -73,6 +73,26 @@ async def get_by_user_and_timerange(
     return rows_to_list(result)
 
 
+async def get_by_user_overlapping_timerange(
+    session: AsyncSession,
+    user_id: int,
+    start: datetime,
+    end: datetime,
+) -> list[dict]:
+    """Get all travel plans for a user that overlap a time range."""
+    stmt = (
+        select(travel_plans_table)
+        .where(
+            travel_plans_table.c.user_id == user_id,
+            travel_plans_table.c.start_time < end,
+            travel_plans_table.c.end_time > start,
+        )
+        .order_by(travel_plans_table.c.start_time)
+    )
+    result = await session.execute(stmt)
+    return rows_to_list(result)
+
+
 async def get_all_by_user(session: AsyncSession, user_id: int) -> list[dict]:
     """Get all travel plans for a user"""
     return await base.get_all(

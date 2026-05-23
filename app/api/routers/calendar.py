@@ -1,11 +1,13 @@
 import logging
+from datetime import date, datetime, time, timedelta, timezone
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
 from starlette.responses import RedirectResponse
 
 from app.contracts.calendar import WebhookRegisterResponse, WebhookEventResponse
+from app.contracts.travel import TravelPlanListResponse
 from app.core.config import settings
 from app.core.dependencies import (
     get_current_user,
@@ -13,6 +15,7 @@ from app.core.dependencies import (
     get_oauth_state_manager,
 )
 from app.contracts.user import TokenData
+from app.db.crud import travel_plan as travel_plan_crud
 from app.db.session import get_db
 from app.modules.auth.google_oauth_service import build_auth_url
 from app.modules.travel_planner.webhook import (
@@ -26,6 +29,27 @@ from app.db.crud import user as user_crud
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["Calendar"])
+
+
+def _day_bounds(day: date) -> tuple[datetime, datetime]:
+    start = datetime.combine(day, time.min, tzinfo=timezone.utc)
+    end = start + timedelta(days=1)
+    return start, end
+
+
+def _serialize_travel_plan(row: dict) -> dict:
+    return {
+        "id": row["id"],
+        "user_id": row["user_id"],
+        "event_id": row["event_id"],
+        "calendar_id": row["calendar_id"],
+        "title": row["event_summary"],
+        "location_name": row.get("location_name"),
+        "latitude": row.get("latitude"),
+        "longitude": row.get("longitude"),
+        "start_at": row["start_time"],
+        "end_at": row["end_time"],
+    }
 
 
 @router.get(
@@ -59,6 +83,39 @@ async def connect_calendar(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to initiate calendar connection: {str(e)}",
+        )
+
+
+@router.get(
+    "/calendar/events",
+    response_model=TravelPlanListResponse,
+    summary="Get Calendar Events For Date",
+    description="Return stored travel plans that overlap the specified UTC date for the authenticated user.",
+)
+async def get_calendar_events_for_date(
+    query_date: date = Query(..., alias="date"),
+    current_user: TokenData = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, list[dict]]:
+    try:
+        user = await user_crud.get_by_email(db, current_user.email)
+        if not user:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, "User not found")
+
+        start, end = _day_bounds(query_date)
+        plans = await travel_plan_crud.get_by_user_overlapping_timerange(
+            db,
+            user["id"],
+            start,
+            end,
+        )
+        return {"travel_plans": [_serialize_travel_plan(plan) for plan in plans]}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to query calendar events: {str(e)}",
         )
 
 

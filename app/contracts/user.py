@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.contracts.disaster import DisasterCategory
 
@@ -11,6 +11,16 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     email: str | None = None
     user_id: int | None = None
+
+
+class UserPreferences(BaseModel):
+    model_config = ConfigDict(frozen=True)
+
+    user_id: str
+    max_distance_km: float = Field(gt=0)
+    max_days_ahead: float = Field(gt=0)
+    enabled_categories: tuple[str, ...]
+    notifications_enabled: bool = True
 
 
 class UserCreate(BaseModel):

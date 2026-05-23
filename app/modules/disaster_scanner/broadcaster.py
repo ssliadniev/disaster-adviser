@@ -1,20 +1,16 @@
 import asyncio
-from typing import Dict
 
-from aiostream import streamcontext
-
-from app.contracts.disaster import StandardDisasterEvent
+from app.db.crud import disaster_event as disaster_event_crud
+from app.db.session import AsyncSessionLocal
+from app.modules.hotspot_tracker import refresh_hotspot_regions
+from app.modules.disaster_scanner.cache import store_disaster
 from app.modules.disaster_scanner.pipeline import build_disaster_pipeline
 from app.modules.disaster_scanner.repository import save_event_to_csv
 
-ACTIVE_DISASTERS_CACHE: Dict[str, StandardDisasterEvent] = {}
-
-
-def get_current_disasters() -> list[StandardDisasterEvent]:
-    return list(ACTIVE_DISASTERS_CACHE.values())
-
 
 async def stream_consumer_worker():
+    from aiostream import streamcontext
+
     print(">>> [WORKER] Background stream consumer started!", flush=True)
     pipeline = build_disaster_pipeline()
 
@@ -26,8 +22,28 @@ async def stream_consumer_worker():
                         f">>> [PIPELINE] Processed: {event.source.value} - {event.title}",
                         flush=True,
                     )
-                    ACTIVE_DISASTERS_CACHE[event.id] = event
+                    store_disaster(event)
                     await save_event_to_csv(event)
+                    from app.modules.notification_service.integration import (
+                        process_disaster_notifications,
+                    )
+
+                    async with AsyncSessionLocal() as session:
+                        await disaster_event_crud.upsert_disaster_event(
+                            session,
+                            external_event_id=event.id,
+                            title=event.title,
+                            category=event.category.value
+                            if hasattr(event.category, "value")
+                            else str(event.category),
+                            latitude=event.latitude,
+                            longitude=event.longitude,
+                            event_date=event.date,
+                            source=event.source.value,
+                            closed_at=getattr(event, "closed", None),
+                        )
+                        await refresh_hotspot_regions(session)
+                        await process_disaster_notifications(session, event)
                 except Exception as e:
                     print(f">>> [PIPELINE ERROR]: {e}", flush=True)
 

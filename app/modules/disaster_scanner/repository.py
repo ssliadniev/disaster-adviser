@@ -36,7 +36,7 @@ async def save_event_to_csv(event: StandardDisasterEvent):
                 [
                     event.id,
                     event.title,
-                    event.category,
+                    event.category.value if hasattr(event.category, "value") else event.category,
                     event.latitude,
                     event.longitude,
                     event.date.isoformat(),
