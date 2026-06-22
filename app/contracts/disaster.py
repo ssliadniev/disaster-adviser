@@ -1,4 +1,5 @@
 from datetime import UTC, datetime
+from typing import Tuple
 from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -7,6 +8,23 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 class DisasterSource(str, Enum):
     NASA = "NASA"
     PDC = "PDC"
+
+
+DedupKey = Tuple[str, str, str]
+
+
+def make_dedup_key(source: str, event_id: str, date, closed=None) -> DedupKey:
+    """
+    Build the dedup key.
+    """
+
+    date_iso = date if isinstance(date, str) else date.isoformat()
+
+    if closed is None:
+        return source, event_id, date_iso
+
+    closed_iso = closed if isinstance(closed, str) else closed.isoformat()
+    return source, event_id, f"{date_iso}|{closed_iso}"
 
 
 class DisasterCategory(str, Enum):
@@ -99,7 +117,7 @@ class StandardDisasterEvent(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    id: str = Field(..., description="Unique identifier from the source API")
+    id: str
     title: str
     category: DisasterCategory
     latitude: float
@@ -123,3 +141,11 @@ class StandardDisasterEvent(BaseModel):
         if isinstance(value, str):
             value = datetime.fromisoformat(value.replace("Z", "+00:00"))
         return value if value.tzinfo else value.replace(tzinfo=UTC)
+
+    @property
+    def dedup_key(self) -> DedupKey:
+        return make_dedup_key(self.source.value, self.id, self.date, self.closed)
+
+
+def dedup_key(event: StandardDisasterEvent) -> DedupKey:
+    return event.dedup_key

@@ -161,3 +161,6 @@ cython_debug/
 notes
 .DS_Store
 .env
+
+# Local development
+local-disaster-scanner

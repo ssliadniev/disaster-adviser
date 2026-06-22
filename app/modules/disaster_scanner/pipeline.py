@@ -1,18 +1,34 @@
+from typing import Iterable, Optional
+
+import aiohttp
 from aiostream import pipe, stream
 
-from app.modules.disaster_scanner.core import normalize_router
-from app.modules.disaster_scanner.operators import deduplicator
-from app.modules.disaster_scanner.streams import fetch_nasa_stream, fetch_pdc_stream
+from app.contracts.disaster import DedupKey, dedup_key
+from app.modules.disaster_scanner.config import ScannerConfig
+from app.modules.disaster_scanner.core import try_normalize
+from app.modules.disaster_scanner.operators import distinct
+from app.modules.disaster_scanner.sources_auth import TokenProvider
+from app.modules.disaster_scanner.streams import (fetch_disasteraware_stream,
+                                                  fetch_nasa_stream)
 
 
-def build_disaster_pipeline():
-    nasa_gen = fetch_nasa_stream()
-    # pdc_gen = fetch_pdc_stream()
-
-    combined_stream = stream.merge(nasa_gen)
+def build_disaster_pipeline(
+    session: aiohttp.ClientSession,
+    token_provider: TokenProvider,
+    config: ScannerConfig,
+    *,
+    initial_keys: Optional[Iterable[DedupKey]] = None,
+):
+    nasa = fetch_nasa_stream(session, config)
+    dae = fetch_disasteraware_stream(session, token_provider, config)
 
     return (
-        combined_stream
-        | pipe.map(normalize_router)
-        | deduplicator.pipe(key_extractor=lambda event: event.id)
+        stream.merge(nasa, dae)
+        | pipe.map(try_normalize)
+        | pipe.filter(lambda event: event is not None)
+        | distinct.pipe(
+            key=dedup_key,
+            max_size=config.dedup_max_size,
+            initial_keys=initial_keys,
+        )
     )
