@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="700" viewBox="0 0 1160 700" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="13">
+  <defs>
+    <marker id="arr" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#5b6472"/>
+    </marker>
+    <marker id="arrT" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#2e7d6f"/>
+    </marker>
+    <marker id="arrL" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#aab1bd"/>
+    </marker>
+  </defs>
+  <rect width="1160" height="700" fill="#ffffff"/>
+
+  <!-- ===== Zones ===== -->
+  <g fill="#f7f8fa" stroke="#d4dae1" stroke-dasharray="4 3">
+    <rect x="20"  y="160" width="185" height="300" rx="10"/>
+    <rect x="225" y="160" width="180" height="300" rx="10"/>
+    <rect x="425" y="160" width="180" height="300" rx="10"/>
+    <rect x="625" y="160" width="235" height="300" rx="10"/>
+    <rect x="20"  y="520" width="1115" height="150" rx="10"/>
+  </g>
+  <g fill="#8a93a0" font-weight="600" font-size="12">
+    <text x="32"  y="182">External Sources</text>
+    <text x="237" y="182">Ingestion</text>
+    <text x="437" y="182">Analysis</text>
+    <text x="637" y="182">Delivery &amp; Users</text>
+    <text x="32"  y="542">Data Layer</text>
+  </g>
+
+  <!-- ===== Top: Client + Public API ===== -->
+  <rect x="30"  y="40" width="150" height="42" rx="6" fill="#e8f0fe" stroke="#4285f4"/><text x="105" y="66" text-anchor="middle">Client</text>
+  <rect x="210" y="40" width="690" height="42" rx="6" fill="#fff8e1" stroke="#f5a623"/><text x="555" y="66" text-anchor="middle" font-weight="600">Public API  ·  FastAPI</text>
+
+  <!-- ===== Legend ===== -->
+  <rect x="930" y="40" width="205" height="112" rx="8" fill="#ffffff" stroke="#d4dae1"/>
+  <text x="942" y="62" font-weight="600" fill="#5b6472">Legend</text>
+  <line x1="944" y1="82"  x2="980" y2="82"  stroke="#5b6472" stroke-width="1.6" marker-end="url(#arr)"/><text x="988" y="86">data / event flow</text>
+  <line x1="944" y1="106" x2="980" y2="106" stroke="#aab1bd" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrL)"/><text x="988" y="110">API request</text>
+  <line x1="944" y1="130" x2="980" y2="130" stroke="#2e7d6f" stroke-width="1.5" marker-end="url(#arrT)"/><text x="988" y="134">persists to DB</text>
+
+  <!-- ===== External sources ===== -->
+  <g>
+    <rect x="33" y="200" width="155" height="34" rx="6" fill="#e8f0fe" stroke="#4285f4"/><text x="110" y="222" text-anchor="middle">NASA EONET</text>
+    <rect x="33" y="248" width="155" height="34" rx="6" fill="#e8f0fe" stroke="#4285f4"/><text x="110" y="270" text-anchor="middle">PDC / DisasterAWARE</text>
+    <rect x="33" y="330" width="155" height="34" rx="6" fill="#e8f0fe" stroke="#4285f4"/><text x="110" y="352" text-anchor="middle">Google Calendar</text>
+    <rect x="33" y="400" width="155" height="34" rx="6" fill="#e8f0fe" stroke="#4285f4"/><text x="110" y="422" text-anchor="middle">Geocoding API</text>
+  </g>
+
+  <!-- ===== Service components ===== -->
+  <g>
+    <rect x="240" y="210" width="150" height="46" rx="6" fill="#ede7f6" stroke="#7e57c2"/><text x="315" y="238" text-anchor="middle">Disaster Scanner</text>
+    <rect x="240" y="345" width="150" height="46" rx="6" fill="#ede7f6" stroke="#7e57c2"/><text x="315" y="373" text-anchor="middle">Travel Planner</text>
+    <rect x="440" y="210" width="150" height="46" rx="6" fill="#ede7f6" stroke="#7e57c2"/><text x="515" y="238" text-anchor="middle">Risk Analyzer</text>
+    <rect x="440" y="345" width="150" height="46" rx="6" fill="#ede7f6" stroke="#7e57c2"/><text x="515" y="373" text-anchor="middle">Hotspot Tracker</text>
+    <rect x="645" y="210" width="180" height="46" rx="6" fill="#ede7f6" stroke="#7e57c2"/><text x="735" y="238" text-anchor="middle">Notification Service</text>
+    <rect x="645" y="345" width="180" height="46" rx="6" fill="#ede7f6" stroke="#7e57c2"/><text x="735" y="373" text-anchor="middle">User &amp; Preferences</text>
+  </g>
+
+  <!-- ===== Database (PostgreSQL cylinder) ===== -->
+  <path d="M230,565 v66 a300,16 0 0,0 600,0 v-66" fill="#fde7e9" stroke="#d93025"/>
+  <ellipse cx="530" cy="565" rx="300" ry="16" fill="#fde7e9" stroke="#d93025"/>
+  <text x="530" y="588" text-anchor="middle" font-weight="600">PostgreSQL</text>
+  <text x="530" y="608" text-anchor="middle" fill="#5b6472" font-size="11">disaster_events · travel_plans · hotspot_regions · notifications</text>
+  <text x="530" y="624" text-anchor="middle" fill="#5b6472" font-size="11">users · user_preferences · oauth_tokens · webhook_channels</text>
+
+  <!-- ===== Data flow (dark) ===== -->
+  <g stroke="#5b6472" stroke-width="1.6" fill="none" marker-end="url(#arr)">
+    <path d="M180,61 L210,61"/>                                  <!-- client -> api -->
+    <path d="M188,217 L240,228"/>                                <!-- nasa -> scanner -->
+    <path d="M188,265 L240,240"/>                                <!-- pdc -> scanner -->
+    <path d="M188,347 L240,360"/>                                <!-- gcal -> planner -->
+    <path d="M240,380 L191,414"/>                                <!-- planner -> geocoding -->
+    <path d="M390,228 L440,228"/>                                <!-- scanner -> risk -->
+    <path d="M390,246 L440,356"/>                                <!-- scanner -> hotspot -->
+    <path d="M390,360 L440,242"/>                                <!-- planner -> risk -->
+    <path d="M390,368 L440,368"/>                                <!-- planner -> hotspot -->
+    <path d="M590,231 L645,231"/>                                <!-- risk -> notif -->
+    <path d="M590,360 L645,248"/>                                <!-- hotspot -> notif -->
+    <path d="M770,345 L770,258"/>                                <!-- prefs -> notif -->
+    <path d="M810,210 L810,82"/>                                 <!-- notif -> api (publish) -->
+  </g>
+  <g fill="#5b6472" font-size="11">
+    <text x="196" y="200">poll events</text>
+    <text x="196" y="330">events / webhook</text>
+    <text x="196" y="404">geocode</text>
+    <text x="815" y="150">publish</text>
+    <text x="778" y="305">prefs</text>
+  </g>
+
+  <!-- ===== API facade requests (light dashed) ===== -->
+  <g stroke="#aab1bd" stroke-width="1.5" fill="none" stroke-dasharray="4 3" marker-end="url(#arrL)">
+    <path d="M300,82 L300,210"/>
+    <path d="M500,82 L500,210"/>
+    <path d="M700,82 L700,210"/>
+  </g>
+
+  <!-- ===== Persistence to DB (teal) ===== -->
+  <g stroke="#2e7d6f" stroke-width="1.5" fill="none" marker-end="url(#arrT)">
+    <path d="M378,256 L378,310 L408,310 L408,551"/>             <!-- scanner -> db (elbow around planner) -->
+    <path d="M315,391 L315,551"/>                                <!-- planner -> db -->
+    <path d="M500,391 L500,551"/>                                <!-- hotspot -> db -->
+    <path d="M660,256 L660,310 L620,310 L620,551"/>             <!-- notif -> db (elbow around prefs) -->
+    <path d="M735,391 L735,551"/>                                <!-- prefs -> db -->
+  </g>
+  <g fill="#2e7d6f" font-size="10.5" text-anchor="middle">
+    <text x="408" y="480">disaster_events</text>
+    <text x="315" y="502">travel_plans</text>
+    <text x="500" y="502">hotspot_regions</text>
+    <text x="620" y="480">notifications</text>
+    <text x="735" y="502">users / prefs</text>
+  </g>
+</svg>
